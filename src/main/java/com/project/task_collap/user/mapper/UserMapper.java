@@ -9,6 +9,6 @@ import com.project.task_collap.user.dtos.UserResponce;
 public class UserMapper {
 
     public UserResponce userToUserResponce(User user) {
-        return new UserResponce(user.getUsername(), user.getEmail(), user.getCreatedAt());
+        return new UserResponce(user.getId(), user.getUsername(), user.getEmail());
     }
 }
