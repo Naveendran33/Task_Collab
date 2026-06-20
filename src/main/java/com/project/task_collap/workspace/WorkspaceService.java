@@ -57,10 +57,6 @@ public class WorkspaceService {
     public List<WorkspaceResponseDto> getMyWorkspaces(Integer ownerId) {
         User owner = getUserById(ownerId);
         List<Workspace> workspaces = workspaceRepository.findByOwner(owner);
-        if (workspaces.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "No Workspace Found for this User with Id " + ownerId);
-        }
         return workspaces.stream().map(workspaceMapper::workspaceToResponse).toList();
     }
 
@@ -145,9 +141,6 @@ public class WorkspaceService {
     public List<MyWorkspacesResponse> getAllMyWorspaces(Integer userId) {
         User user = getUserById(userId);
         List<WorkspaceMember> myMemberDetails = workspaceMemberRepository.findAllWorkspaceMembersByUser(user);
-        if (myMemberDetails.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "You are Not added in Any Workspace");
-        }
 
         return myMemberDetails.stream().map(workspaceMapper::workspaceMemberToMyWorkspaceResponse).toList();
 
