@@ -12,23 +12,26 @@ import com.project.task_collap.workspace.dtos.WorkspaceUserResponse;
 
 @Component
 public class WorkspaceMapper {
+    private WorkspaceMapper() {
+        /* This utility class should not be instantiated */
+    }
 
-    public WorkspaceUserResponse userToUserResponse(User user) {
+    public static WorkspaceUserResponse userToUserResponse(User user) {
         return new WorkspaceUserResponse(user.getUsername(), user.getEmail());
     }
 
-    public WorkspaceResponseDto workspaceToResponse(Workspace workspace) {
+    public static WorkspaceResponseDto workspaceToResponse(Workspace workspace) {
         return new WorkspaceResponseDto(workspace.getId(), workspace.getName(), workspace.getDescription(),
                 workspace.getOwner().getId());
     }
 
-    public WorkspaceMemberResponse workspaceMemberToResponse(WorkspaceMember workspaceMember) {
+    public static WorkspaceMemberResponse workspaceMemberToResponse(WorkspaceMember workspaceMember) {
         return new WorkspaceMemberResponse(workspaceMember.getId(), workspaceMember.getUser().getId(),
                 workspaceMember.getWorkspace().getId(),
                 workspaceMember.getRole());
     }
 
-    public MyWorkspacesResponse workspaceMemberToMyWorkspaceResponse(WorkspaceMember workspaceMember) {
+    public static MyWorkspacesResponse workspaceMemberToMyWorkspaceResponse(WorkspaceMember workspaceMember) {
         return new MyWorkspacesResponse(workspaceMember.getWorkspace().getId(),
                 workspaceMember.getWorkspace().getName(), workspaceMember.getId(), workspaceMember.getRole());
     }

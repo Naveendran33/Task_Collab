@@ -25,14 +25,11 @@ public class WorkspaceService {
 
     private final WorkspaceRepository workspaceRepository;
 
-    private final WorkspaceMapper workspaceMapper;
-
     private final UserRepository userRepository;
 
-    public WorkspaceService(WorkspaceRepository workspaceRepository, WorkspaceMapper workspaceMapper,
+    public WorkspaceService(WorkspaceRepository workspaceRepository,
             UserRepository userRepository, WorkspaceMemberRepository workspaceMemberRepository) {
         this.workspaceRepository = workspaceRepository;
-        this.workspaceMapper = workspaceMapper;
         this.userRepository = userRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
     }
@@ -51,13 +48,13 @@ public class WorkspaceService {
         member.setUser(owner);
         member.setWorkspace(workspace);
         workspaceMemberRepository.save(member);
-        return workspaceMapper.workspaceToResponse(workspace);
+        return WorkspaceMapper.workspaceToResponse(workspace);
     }
 
     public List<WorkspaceResponseDto> getMyWorkspaces(Integer ownerId) {
         User owner = getUserById(ownerId);
         List<Workspace> workspaces = workspaceRepository.findByOwner(owner);
-        return workspaces.stream().map(workspaceMapper::workspaceToResponse).toList();
+        return workspaces.stream().map(WorkspaceMapper::workspaceToResponse).toList();
     }
 
     public String deleteMyWorkspace(Integer ownerId, Integer workspaceId) {
@@ -91,7 +88,7 @@ public class WorkspaceService {
             workspaceMember = workspaceMemberRepository.save(workspaceMember);
             workspaceRepository.save(workspace);
 
-            return workspaceMapper.workspaceMemberToResponse(workspaceMember);
+            return WorkspaceMapper.workspaceMemberToResponse(workspaceMember);
         } else {
             throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,
                     "You are Not a Owner to add member to this workspace");
@@ -101,7 +98,7 @@ public class WorkspaceService {
     public List<WorkspaceMemberResponse> getAllMembers(Integer workspaceId) {
         Workspace workspace = getWorkspaceById(workspaceId);
         List<WorkspaceMember> workspaceMembers = workspaceMemberRepository.findAllByWorkspace(workspace);
-        return workspaceMembers.stream().map(workspaceMapper::workspaceMemberToResponse).toList();
+        return workspaceMembers.stream().map(WorkspaceMapper::workspaceMemberToResponse).toList();
     }
 
     @Transactional
@@ -132,7 +129,7 @@ public class WorkspaceService {
             }
             member.setRole(role);
             workspaceMemberRepository.save(member);
-            return workspaceMapper.workspaceMemberToResponse(member);
+            return WorkspaceMapper.workspaceMemberToResponse(member);
         } else {
             throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Only Owner can Change Roles");
         }
@@ -142,7 +139,7 @@ public class WorkspaceService {
         User user = getUserById(userId);
         List<WorkspaceMember> myMemberDetails = workspaceMemberRepository.findAllWorkspaceMembersByUser(user);
 
-        return myMemberDetails.stream().map(workspaceMapper::workspaceMemberToMyWorkspaceResponse).toList();
+        return myMemberDetails.stream().map(WorkspaceMapper::workspaceMemberToMyWorkspaceResponse).toList();
 
     }
 

@@ -22,17 +22,14 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    private final UserMapper userMapper;
-
     private final AuthenticationManager authenticationManager;
 
     private final JwtUtil jwtUtil;
 
-    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, UserMapper userMapper,
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository,
             AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
-        this.userMapper = userMapper;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
     }
@@ -48,7 +45,7 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(userRequest.password()));
 
         userRepository.save(user);
-        return userMapper.userToUserResponce(user);
+        return UserMapper.userToUserResponce(user);
     }
 
     public String loginUser(LoginRequest request) {
@@ -63,7 +60,7 @@ public class UserService {
     }
 
     public List<UserResponce> allUsers() {
-        return userRepository.findAll().stream().map(userMapper::userToUserResponce).toList();
+        return userRepository.findAll().stream().map(UserMapper::userToUserResponce).toList();
     }
 
 }

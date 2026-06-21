@@ -7,8 +7,11 @@ import com.project.task_collap.user.dtos.UserResponce;
 
 @Component
 public class UserMapper {
+    private UserMapper() {
+        /* This utility class should not be instantiated */
+    }
 
-    public UserResponce userToUserResponce(User user) {
+    public static UserResponce userToUserResponce(User user) {
         return new UserResponce(user.getId(), user.getUsername(), user.getEmail());
     }
 }
