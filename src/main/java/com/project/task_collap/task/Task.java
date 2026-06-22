@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.project.task_collap.user.User;
 import com.project.task_collap.workspace.Workspace;
+import com.project.task_collap.workspace.WorkspaceMember;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,8 +41,8 @@ public class Task {
     private Workspace workspace;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assignee_id")
-    private User assignee;
+    @JoinColumn(name = "assignee_id", nullable = true)
+    private WorkspaceMember assignee;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

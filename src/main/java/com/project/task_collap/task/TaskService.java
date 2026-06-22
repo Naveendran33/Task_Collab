@@ -1,5 +1,6 @@
 package com.project.task_collap.task;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,9 +14,12 @@ import com.project.task_collap.task.dto.TaskResponse;
 import com.project.task_collap.user.User;
 import com.project.task_collap.user.UserRepository;
 import com.project.task_collap.workspace.Workspace;
+import com.project.task_collap.workspace.WorkspaceMember;
 import com.project.task_collap.workspace.WorkspaceMemberRepository;
 import com.project.task_collap.workspace.WorkspaceRepository;
+import com.project.task_collap.workspace.WorkspaceRole;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @Service
@@ -42,21 +46,21 @@ public class TaskService {
                     "You are not allowed to create task in this workspace");
         }
 
-        User assignee = userIdToUser(request.assigneeId());
-        if (Boolean.FALSE.equals(workspaceMemberRepository.existsByUserAndWorkspace(assignee, workspace))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Assignee not a Member of the workspace Please add him to assign a task");
-        }
-
         Task task = new Task();
         task.setTitle(request.title());
         task.setDescription(request.description());
         task.setWorkspace(workspace);
-        task.setAssignee(assignee);
+        if (request.assigneeMemberId() != null) {
+            WorkspaceMember assignee = memberIdToWorkspaceMember(request.assigneeMemberId());
+            if (!assignee.getWorkspace().equals(workspace) && assignee.getRole() == WorkspaceRole.VIEWER) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Cannot able to Add Task to thi Member");
+            }
+            task.setAssignee(assignee);
+        }
         task.setStatus(request.status());
         task.setPriority(request.priority());
         task.setDueDate(request.dueDate());
-
         taskRepository.save(task);
 
         return TaskMapper.taskToTaskResponse(task);
@@ -79,6 +83,36 @@ public class TaskService {
         }
     }
 
+    public List<TaskResponse> getAllMyTask(Integer userId) {
+        User user = userIdToUser(userId);
+        List<Task> myTasks = taskRepository.findAllTasksByAssignee(user);
+        return myTasks.stream().map(TaskMapper::taskToTaskResponse).toList();
+    }
+
+    public TaskResponse assignTask(Integer ownerId, Integer taskId, Integer assigneeId) {
+        Task task = taskIdToTask(taskId);
+        WorkspaceMember assignee = memberIdToWorkspaceMember(assigneeId);
+        if (task.getWorkspace().getOwner().getId().equals(ownerId) && assignee.getRole() != WorkspaceRole.VIEWER) {
+            task.setAssignee(assignee);
+            task = taskRepository.save(task);
+            return TaskMapper.taskToTaskResponse(task);
+        } else {
+            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,
+                    "Only User can assign \"Worker\" To Task ");
+        }
+    }
+
+    public TaskResponse giveDueDate(Integer ownerId, Integer taskId, LocalDate dueDate) {
+        Task task = taskIdToTask(taskId);
+        if (task.getWorkspace().getOwner().getId().equals(ownerId)) {
+            task.setDueDate(dueDate);
+            task = taskRepository.save(task);
+            return TaskMapper.taskToTaskResponse(task);
+        } else {
+            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "You are Not allowed to set the dueDate");
+        }
+    }
+
     public User userIdToUser(Integer userId) {
         return userRepository.findById(userId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found at Id : " + userId));
@@ -88,4 +122,19 @@ public class TaskService {
         return workspaceRepository.findById(workspaceId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workspace Not Found at Id : " + workspaceId));
     }
+
+    public Task taskIdToTask(Integer taskId) {
+        return taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No Task with Id : " + taskId));
+    }
+
+    public Integer getUserIdFromHeader(HttpServletRequest httpServletRequest) {
+        return (Integer) httpServletRequest.getAttribute("userId");
+    }
+
+    public WorkspaceMember memberIdToWorkspaceMember(Integer memberId) {
+        return workspaceMemberRepository.findById(memberId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "WorkspaceMember no found"));
+    }
+
 }
