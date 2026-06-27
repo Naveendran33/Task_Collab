@@ -1,6 +1,5 @@
 package com.project.task_collap.comment;
 
-import com.project.task_collap.workspace.WorkspaceRepository;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -16,6 +15,8 @@ import com.project.task_collap.user.UserRepository;
 import com.project.task_collap.workspace.WorkspaceMember;
 import com.project.task_collap.workspace.WorkspaceMemberRepository;
 import com.project.task_collap.workspace.WorkspaceRole;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class CommentService {
@@ -40,7 +41,8 @@ public class CommentService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "You are Not a Member of the Workspace"));
 
-        if (task.getAssignee().equals(commenter) || commenter.getRole().equals(WorkspaceRole.OWNER)) {
+        if (task.getAssignee() != null && task.getAssignee().equals(commenter)
+                || commenter.getRole().equals(WorkspaceRole.OWNER)) {
             Comment comment = new Comment();
             comment.setCommenter(commenter);
             comment.setContent(request.content());
@@ -100,5 +102,9 @@ public class CommentService {
     private Comment getCommentFromCommentId(Integer commentId) {
         return commentRepository.findById(commentId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment Not found with Id : " + commentId));
+    }
+
+    public Integer getUserFromServlet(HttpServletRequest request) {
+        return (Integer) request.getAttribute("userId");
     }
 }

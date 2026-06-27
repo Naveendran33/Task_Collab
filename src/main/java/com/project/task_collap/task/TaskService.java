@@ -63,7 +63,7 @@ public class TaskService {
         task.setStatus(request.status());
         task.setPriority(request.priority());
         task.setDueDate(request.dueDate());
-        taskRepository.save(task);
+        task = taskRepository.save(task);
 
         return TaskMapper.taskToTaskResponse(task);
 
