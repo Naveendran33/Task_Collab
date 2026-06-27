@@ -1,6 +1,7 @@
 package com.project.task_collap.workspace;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,6 +17,8 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
     List<WorkspaceMember> findAllByWorkspace(Workspace workspace);
 
     Boolean existsByUserAndWorkspace(User user, Workspace workspace);
+
+    Optional<WorkspaceMember> findByUserAndWorkspace(User user, Workspace workspace);
 
     List<WorkspaceMember> findAllWorkspaceMembersByUser(User user);
 }

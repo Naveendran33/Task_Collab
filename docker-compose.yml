@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  Task_db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ADMIN
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: task_db
+    ports:
+      - "1234:5432"
+    volumes:
+      - task_db_data:/var/lib/postgresql/data
+    networks:
+      - task_network
+
+volumes:
+  task_db_data:
+
+networks:
+  task_network:
