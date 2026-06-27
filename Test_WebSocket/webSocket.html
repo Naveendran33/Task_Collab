@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket / STOMP Test client</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 30px;
+            background-color: #f7f9fc;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border- radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .row {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #log {
+            background: #222;
+            color: #00ff00;
+            padding: 15px;
+            height: 300px;
+            overflow-y: scroll;
+            font-family: monospace;
+            border-radius: 4px;
+        }
+
+        .status {
+            font-weight: bold;
+            color: orange;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>🔌 WebSocket & STOMP Testing Tool</h2>
+        <div class="row">
+            <p>Status: <span id="status" class="status">DISCONNECTED</span></p>
+        </div>
+        <div class="row">
+            <button id="connectBtn" onclick="connect()">Connect to /ws</button>
+            <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+        </div>
+
+        <hr>
+
+        <h3>📢 Subscribe to Task Comments</h3>
+        <div class="row">
+            <label>Task ID to Listen To:</label>
+            <input type="text" id="taskId" value="1" style="width: 80px;">
+            <button id="subBtn" onclick="subscribe()" disabled>Subscribe</button>
+        </div>
+
+        <hr>
+
+        <h3>💻 Connection Log</h3>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        let subscription = null;
+
+        function log(message) {
+            const logDiv = document.getElementById("log");
+            logDiv.innerHTML += `[${new Date().toLocaleTimeString()}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function connect() {
+            log("Attempting to connect via SockJS...");
+            const socket = new SockJS('http://localhost:1717/ws');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function (frame) {
+                document.getElementById("status").innerText = "CONNECTED";
+                document.getElementById("status").style.color = "green";
+                document.getElementById("connectBtn").disabled = true;
+                document.getElementById("disconnectBtn").disabled = false;
+                document.getElementById("subBtn").disabled = false;
+                log("Connected successfully! " + frame);
+            }, function (error) {
+                log("Connection error: " + error);
+                disconnect();
+            });
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+            document.getElementById("status").innerText = "DISCONNECTED";
+            document.getElementById("status").style.color = "red";
+            document.getElementById("connectBtn").disabled = false;
+            document.getElementById("disconnectBtn").disabled = true;
+            document.getElementById("subBtn").disabled = true;
+            log("Disconnected.");
+        }
+
+        function subscribe() {
+            const taskId = document.getElementById("taskId").value;
+            const topic = "/live/task/" + taskId + "/comments";
+            log("Subscribing to topic: " + topic);
+
+            if (subscription) {
+                subscription.unsubscribe();
+            }
+
+            subscription = stompClient.subscribe(topic, function (message) {
+                log("🔔 RECEIVED BROADCAST: " + message.body);
+            });
+
+            stompClient.subscribe(topic + "/update", function (message) {
+                log("🔄 RECEIVED UPDATE BROADCAST: " + message.body);
+            });
+            stompClient.subscribe(topic + "/delete", function (message) {
+                log("❌ RECEIVED DELETE BROADCAST: " + message.body);
+            });
+
+            log("Subscribed successfully!");
+        }                                                                                             
+    </script>
+</body>
+
+</html>

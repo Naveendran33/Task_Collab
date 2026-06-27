@@ -3,6 +3,7 @@ package com.project.task_collap.comment;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -25,13 +26,16 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public CommentService(TaskRepository taskRepository, CommentRepository commentRepository,
-            UserRepository userRepository, WorkspaceMemberRepository workspaceMemberRepository) {
+            UserRepository userRepository, WorkspaceMemberRepository workspaceMemberRepository,
+            SimpMessagingTemplate messagingTemplate) {
         this.taskRepository = taskRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public CommentResponse addComment(Integer userId, CommentRequest request) {
@@ -48,7 +52,11 @@ public class CommentService {
             comment.setContent(request.content());
             comment.setTask(task);
             comment = commentRepository.save(comment);
-            return CommentMapper.commentToCommentResponse(comment);
+
+            CommentResponse commentResponse = CommentMapper.commentToCommentResponse(comment);
+            messagingTemplate.convertAndSend("/live/task/" + task.getId() + "/comments", commentResponse);
+
+            return commentResponse;
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are Not allowed to Comment on this task");
         }
@@ -72,7 +80,12 @@ public class CommentService {
         if (comment.getCommenter().getUser().getId().equals(userId)) {
             comment.setContent(newContent);
             commentRepository.save(comment);
-            return CommentMapper.commentToCommentResponse(comment);
+            CommentResponse commentResponse = CommentMapper.commentToCommentResponse(comment);
+
+            messagingTemplate.convertAndSend("/live/task/" + comment.getTask().getId() + "/comments/update",
+                    commentResponse);
+
+            return commentResponse;
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are Not a Commenter");
         }
@@ -82,6 +95,8 @@ public class CommentService {
         Comment comment = getCommentFromCommentId(commentId);
         if (comment.getCommenter().getUser().getId().equals(userId)
                 || comment.getTask().getWorkspace().getOwner().getId().equals(userId)) {
+            messagingTemplate.convertAndSend("/live/task/" + comment.getTask().getId() + "/comments/delete", commentId);
+
             commentRepository.delete(comment);
             return "Comment with Id : " + commentId + " deleted Successfully";
         } else {
