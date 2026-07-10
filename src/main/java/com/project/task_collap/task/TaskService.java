@@ -148,12 +148,12 @@ public class TaskService {
         Task task = taskIdToTask(taskId);
 
         if (task.getWorkspace().getOwner().getId().equals(userId)) {
-            if (updateRequest.name().isPresent())
-                task.setTitle(updateRequest.name().get());
-            if (updateRequest.description().isPresent())
-                task.setDescription(updateRequest.description().get());
-            if (updateRequest.priority().isPresent())
-                task.setPriority(updateRequest.priority().get());
+            if (updateRequest.name() != null)
+                task.setTitle(updateRequest.name());
+            if (updateRequest.description() != null)
+                task.setDescription(updateRequest.description());
+            if (updateRequest.priority() != null)
+                task.setPriority(updateRequest.priority());
 
             task = taskRepository.save(task);
             return TaskMapper.taskToTaskResponse(task);

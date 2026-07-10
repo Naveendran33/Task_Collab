@@ -46,10 +46,11 @@ public class CommentController {
     }
 
     @PatchMapping("/edit/{commentId}")
-    public ResponseEntity<CommentResponse> editComment(@PathVariable Integer commentId, @RequestParam String newContent,
+    public ResponseEntity<CommentResponse> editComment(@PathVariable Integer commentId,
+            @Valid @RequestBody CommentRequest request,
             HttpServletRequest httpServlet) {
         Integer userId = commentService.getUserFromServlet(httpServlet);
-        CommentResponse response = commentService.editComment(userId, commentId, newContent);
+        CommentResponse response = commentService.editComment(userId, commentId, request.content());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

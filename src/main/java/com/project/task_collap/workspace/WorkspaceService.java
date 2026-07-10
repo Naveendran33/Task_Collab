@@ -57,6 +57,7 @@ public class WorkspaceService {
         return workspaces.stream().map(WorkspaceMapper::workspaceToResponse).toList();
     }
 
+    @Transactional
     public String deleteMyWorkspace(Integer ownerId, Integer workspaceId) {
         Workspace workspace = getWorkspaceById(workspaceId);
         if (workspace.getOwner().getId().equals(ownerId)) {

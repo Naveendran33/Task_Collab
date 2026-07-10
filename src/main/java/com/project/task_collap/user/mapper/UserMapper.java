@@ -1,17 +1,14 @@
 package com.project.task_collap.user.mapper;
 
-import org.springframework.stereotype.Component;
-
 import com.project.task_collap.user.User;
-import com.project.task_collap.user.dtos.UserResponce;
+import com.project.task_collap.user.dtos.UserResponse;
 
-@Component
 public class UserMapper {
     private UserMapper() {
         /* This utility class should not be instantiated */
     }
 
-    public static UserResponce userToUserResponce(User user) {
-        return new UserResponce(user.getId(), user.getUsername(), user.getEmail());
+    public static UserResponse userToUserResponse(User user) {
+        return new UserResponse(user.getId(), user.getUsername(), user.getEmail());
     }
 }

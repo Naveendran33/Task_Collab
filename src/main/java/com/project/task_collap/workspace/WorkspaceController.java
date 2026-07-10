@@ -40,18 +40,18 @@ public class WorkspaceController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/my-workspaces")
+    @GetMapping("/owned")
     public ResponseEntity<List<WorkspaceResponseDto>> getMyWorkspace(HttpServletRequest httpServlet) {
         Integer ownerId = workspaceService.currentUserId(httpServlet);
-        List<WorkspaceResponseDto> responce = workspaceService.getMyWorkspaces(ownerId);
-        return new ResponseEntity<>(responce, HttpStatus.OK);
+        List<WorkspaceResponseDto> response = workspaceService.getMyWorkspaces(ownerId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteMyWorkspace(HttpServletRequest httpServlet, @RequestParam Integer workspaceId) {
         Integer ownerId = workspaceService.currentUserId(httpServlet);
-        String responce = workspaceService.deleteMyWorkspace(ownerId, workspaceId);
-        return new ResponseEntity<>(responce, HttpStatus.OK);
+        String response = workspaceService.deleteMyWorkspace(ownerId, workspaceId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("member/add")
@@ -77,9 +77,10 @@ public class WorkspaceController {
     }
 
     @PutMapping("/member/update-role")
-    public ResponseEntity<WorkspaceMemberResponse> updateRole(HttpServletRequest httpSelvlet, Integer memberId,
-            WorkspaceRole role) {
-        Integer ownerId = workspaceService.currentUserId(httpSelvlet);
+    public ResponseEntity<WorkspaceMemberResponse> updateRole(HttpServletRequest httpServlet,
+            @RequestParam Integer memberId,
+            @RequestParam WorkspaceRole role) {
+        Integer ownerId = workspaceService.currentUserId(httpServlet);
         WorkspaceMemberResponse response = workspaceService.updateMemberRole(ownerId, memberId, role);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

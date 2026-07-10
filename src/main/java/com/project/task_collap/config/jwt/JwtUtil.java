@@ -23,11 +23,11 @@ public class JwtUtil {
                 .claim("id", id)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(sighned())
+                .signWith(getSigningKey())
                 .compact();
     }
 
-    public SecretKey sighned() {
+    private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -40,7 +40,7 @@ public class JwtUtil {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parser().verifyWith(sighned()).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
     }
 
     public Boolean isTokenValid(String token) {

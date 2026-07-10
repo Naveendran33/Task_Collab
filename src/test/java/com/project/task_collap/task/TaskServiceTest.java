@@ -63,7 +63,7 @@ class TaskServiceTest {
         workspace.setName("Test");
 
         WorkspaceResponseDto workspaceResponseDto = new WorkspaceResponseDto(workspace.getId(), workspace.getName(),
-                workspace.getDescription(), workspace.getOwner().getId());
+                workspace.getDescription(), workspace.getOwner().getId(), workspace.getOwner().getUsername(), workspace.getCreatedAt());
 
         WorkspaceMember member = new WorkspaceMember();
         member.setId(1);
@@ -72,7 +72,7 @@ class TaskServiceTest {
         member.setWorkspace(workspace);
 
         WorkspaceMemberResponse memberResponse = new WorkspaceMemberResponse(member.getId(), member.getUser().getId(),
-                member.getWorkspace().getId(), member.getRole());
+                member.getWorkspace().getId(), member.getRole(), member.getUser().getUsername(), member.getUser().getEmail());
 
         Task task = new Task();
         task.setAssignee(member);

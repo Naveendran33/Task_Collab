@@ -1,7 +1,5 @@
 package com.project.task_collap.workspace.mapper;
 
-import org.springframework.stereotype.Component;
-
 import com.project.task_collap.user.User;
 import com.project.task_collap.workspace.Workspace;
 import com.project.task_collap.workspace.WorkspaceMember;
@@ -10,7 +8,6 @@ import com.project.task_collap.workspace.dtos.WorkspaceMemberResponse;
 import com.project.task_collap.workspace.dtos.WorkspaceResponseDto;
 import com.project.task_collap.workspace.dtos.WorkspaceUserResponse;
 
-@Component
 public class WorkspaceMapper {
     private WorkspaceMapper() {
         /* This utility class should not be instantiated */
@@ -22,13 +19,14 @@ public class WorkspaceMapper {
 
     public static WorkspaceResponseDto workspaceToResponse(Workspace workspace) {
         return new WorkspaceResponseDto(workspace.getId(), workspace.getName(), workspace.getDescription(),
-                workspace.getOwner().getId());
+                workspace.getOwner().getId(), workspace.getOwner().getUsername(), workspace.getCreatedAt());
     }
 
     public static WorkspaceMemberResponse workspaceMemberToResponse(WorkspaceMember workspaceMember) {
         return new WorkspaceMemberResponse(workspaceMember.getId(), workspaceMember.getUser().getId(),
                 workspaceMember.getWorkspace().getId(),
-                workspaceMember.getRole());
+                workspaceMember.getRole(), workspaceMember.getUser().getUsername(),
+                workspaceMember.getUser().getEmail());
     }
 
     public static MyWorkspacesResponse workspaceMemberToMyWorkspaceResponse(WorkspaceMember workspaceMember) {

@@ -1,11 +1,8 @@
 package com.project.task_collap.task;
 
-import org.springframework.stereotype.Component;
-
 import com.project.task_collap.task.dto.TaskResponse;
 import com.project.task_collap.workspace.mapper.WorkspaceMapper;
 
-@Component
 public class TaskMapper {
 
     public static TaskResponse taskToTaskResponse(Task task) {
