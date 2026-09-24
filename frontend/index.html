@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TaskCollab — High-performance real-time task collaboration platform.">
+    <title>TaskCollab — Real-time Task Collaboration</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"></aside>
+
+        <!-- Main Body -->
+        <div class="app-body">
+            <header id="app-header"></header>
+
+            <main id="main-content"></main>
+
+            <footer id="app-footer">
+                <span class="status-indicator">
+                    <span class="status-dot disconnected"></span>
+                    <span>Real-time Broker</span>
+                </span>
+                <span class="copyright">TaskCollab &copy; 2026</span>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- External Client Libraries -->
+    <script src="lib/sockjs.min.js"></script>
+    <script src="lib/stomp.min.js"></script>
+
+    <!-- Core Modules -->
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/auth.js"></script>
+    <script src="js/core/api.js"></script>
+    <script src="js/core/websocket.js"></script>
+    <script src="js/core/router.js"></script>
+
+    <!-- UI Components -->
+    <script src="js/components/avatar.js"></script>
+    <script src="js/components/badge.js"></script>
+    <script src="js/components/loader.js"></script>
+    <script src="js/components/modal.js"></script>
+    <script src="js/components/confirm-dialog.js"></script>
+    <script src="js/components/toast.js"></script>
+    <script src="js/components/sidebar.js"></script>
+
+    <!-- Pages -->
+    <script src="js/pages/auth.js"></script>
+    <script src="js/pages/dashboard.js"></script>
+    <script src="js/pages/workspace.js"></script>
+    <script src="js/pages/task-detail.js"></script>
+
+    <!-- Application Bootstrap -->
+    <script src="js/app.js"></script>
+</body>
+</html>
