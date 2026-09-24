@@ -2,15 +2,23 @@ package com.project.task_collap.task;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.project.task_collap.task.dto.TaskRequest;
 import com.project.task_collap.task.dto.TaskResponse;
@@ -21,8 +29,6 @@ import com.project.task_collap.workspace.WorkspaceMember;
 import com.project.task_collap.workspace.WorkspaceMemberRepository;
 import com.project.task_collap.workspace.WorkspaceRepository;
 import com.project.task_collap.workspace.WorkspaceRole;
-import com.project.task_collap.workspace.dtos.WorkspaceMemberResponse;
-import com.project.task_collap.workspace.dtos.WorkspaceResponseDto;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
@@ -39,72 +45,158 @@ class TaskServiceTest {
     @InjectMocks
     TaskService taskService;
 
-    @Test
-    void testCreateTask() {
-        User user = new User();
-        user.setCreatedAt(LocalDateTime.MAX);
-        user.setEmail("naveen@gmail.com");
-        user.setId(1);
-        user.setPasswordHash("1234");
-        user.setUsername("naveen");
+    private User owner;
+    private User workerUser;
+    private Workspace workspace;
+    private WorkspaceMember workerMember;
+    private WorkspaceMember viewerMember;
+    private Task sampleTask;
 
-        User assignee = new User();
-        assignee.setCreatedAt(LocalDateTime.MAX);
-        assignee.setEmail("ram@gmail.com");
-        assignee.setId(2);
-        assignee.setPasswordHash("4321");
-        assignee.setUsername("ram");
+    @BeforeEach
+    void setUp() {
+        owner = new User();
+        owner.setId(1);
+        owner.setUsername("naveen");
+        owner.setEmail("naveen@gmail.com");
+        owner.setPasswordHash("1234");
+        owner.setCreatedAt(LocalDateTime.now());
 
-        Workspace workspace = new Workspace();
+        workerUser = new User();
+        workerUser.setId(2);
+        workerUser.setUsername("ram");
+        workerUser.setEmail("ram@gmail.com");
+        workerUser.setPasswordHash("4321");
+        workerUser.setCreatedAt(LocalDateTime.now());
+
+        workspace = new Workspace();
         workspace.setId(1);
-        workspace.setCreatedAt(LocalDateTime.MAX);
-        workspace.setOwner(user);
+        workspace.setName("Test Workspace");
         workspace.setDescription("Just Testing");
-        workspace.setName("Test");
+        workspace.setOwner(owner);
+        workspace.setCreatedAt(LocalDateTime.now());
 
-        WorkspaceResponseDto workspaceResponseDto = new WorkspaceResponseDto(workspace.getId(), workspace.getName(),
-                workspace.getDescription(), workspace.getOwner().getId(), workspace.getOwner().getUsername(), workspace.getCreatedAt());
+        workerMember = new WorkspaceMember();
+        workerMember.setId(10);
+        workerMember.setUser(workerUser);
+        workerMember.setWorkspace(workspace);
+        workerMember.setRole(WorkspaceRole.WORKER);
 
-        WorkspaceMember member = new WorkspaceMember();
-        member.setId(1);
-        member.setRole(WorkspaceRole.WORKER);
-        member.setUser(assignee);
-        member.setWorkspace(workspace);
+        viewerMember = new WorkspaceMember();
+        viewerMember.setId(20);
+        viewerMember.setUser(workerUser);
+        viewerMember.setWorkspace(workspace);
+        viewerMember.setRole(WorkspaceRole.VIEWER);
 
-        WorkspaceMemberResponse memberResponse = new WorkspaceMemberResponse(member.getId(), member.getUser().getId(),
-                member.getWorkspace().getId(), member.getRole(), member.getUser().getUsername(), member.getUser().getEmail());
+        sampleTask = new Task();
+        sampleTask.setId(100);
+        sampleTask.setTitle("Testing Task");
+        sampleTask.setDescription("Test Description");
+        sampleTask.setWorkspace(workspace);
+        sampleTask.setAssignee(workerMember);
+        sampleTask.setStatus(TaskStatus.TODO);
+        sampleTask.setPriority(TaskPriority.LOW);
+        sampleTask.setDueDate(LocalDate.now().plusDays(5));
+        sampleTask.setCreatedAt(LocalDateTime.now());
+        sampleTask.setUpdatedAt(LocalDateTime.now());
+    }
 
-        Task task = new Task();
-        task.setAssignee(member);
-        task.setCreatedAt(LocalDateTime.MAX);
-        task.setDescription("Test");
-        task.setWorkspace(workspace);
-        task.setDueDate(LocalDate.MAX);
-        task.setId(1);
-        task.setPriority(TaskPriority.LOW);
-        task.setStatus(TaskStatus.TODO);
-        task.setTitle("Testing");
-        task.setUpdatedAt(LocalDateTime.MAX);
+    @Test
+    void testCreateTask_Success() {
+        TaskRequest request = new TaskRequest(
+                sampleTask.getTitle(), sampleTask.getDescription(), workspace.getId(),
+                workerMember.getId(), sampleTask.getStatus(), sampleTask.getPriority(), sampleTask.getDueDate());
 
-        TaskRequest request = new TaskRequest(task.getTitle(), task.getDescription(), 1, 1, TaskStatus.TODO,
-                TaskPriority.LOW, task.getDueDate());
+        Mockito.when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
+        Mockito.when(workspaceMemberRepository.findById(workerMember.getId())).thenReturn(Optional.of(workerMember));
+        Mockito.when(taskRepository.save(Mockito.any(Task.class))).thenReturn(sampleTask);
 
-        TaskResponse expected = new TaskResponse(task.getId(), task.getTitle(), task.getDescription(),
-                workspaceResponseDto, memberResponse, task.getStatus(), task.getPriority(), task.getDueDate(),
-                task.getCreatedAt(), task.getUpdatedAt());
+        TaskResponse response = taskService.createTask(request, owner.getId());
 
-        Mockito.when(workspaceMemberRepository.findById(1)).thenReturn(Optional.of(member));
-        Mockito.when(workspaceRepository.findById(1)).thenReturn(Optional.of(workspace));
-        Mockito.when(taskRepository.save(Mockito.any(Task.class))).thenReturn(task);
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(sampleTask.getId(), response.taskId());
+        Assertions.assertEquals(sampleTask.getTitle(), response.title());
+        Assertions.assertEquals(TaskStatus.TODO, response.status());
+    }
 
-        TaskResponse response = taskService.createTask(request, 1);
+    @Test
+    void testCreateTask_Forbidden_WhenNotOwner() {
+        TaskRequest request = new TaskRequest(
+                sampleTask.getTitle(), sampleTask.getDescription(), workspace.getId(),
+                workerMember.getId(), sampleTask.getStatus(), sampleTask.getPriority(), sampleTask.getDueDate());
 
-        Assertions.assertEquals(expected.taskId(), response.taskId());
-        Assertions.assertEquals(expected.title(), response.title());
-        Assertions.assertEquals(expected.description(), response.description());
-        Assertions.assertEquals(expected.assignee(), response.assignee());
-        Assertions.assertEquals(expected.createdAt(), response.createdAt());
-        Assertions.assertEquals(expected.dueDate(), response.dueDate());
+        Mockito.when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
 
+        ResponseStatusException ex = Assertions.assertThrows(ResponseStatusException.class, () -> {
+            taskService.createTask(request, 999); // 999 is not owner
+        });
+
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    void testCreateTask_Forbidden_WhenAssigneeIsViewer() {
+        TaskRequest request = new TaskRequest(
+                sampleTask.getTitle(), sampleTask.getDescription(), workspace.getId(),
+                viewerMember.getId(), sampleTask.getStatus(), sampleTask.getPriority(), sampleTask.getDueDate());
+
+        Mockito.when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
+        Mockito.when(workspaceMemberRepository.findById(viewerMember.getId())).thenReturn(Optional.of(viewerMember));
+
+        ResponseStatusException ex = Assertions.assertThrows(ResponseStatusException.class, () -> {
+            taskService.createTask(request, owner.getId());
+        });
+
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+        Assertions.assertTrue(ex.getReason().contains("VIEWER"));
+    }
+
+    @Test
+    void testChangeStatus_Success() {
+        Mockito.when(taskRepository.findById(sampleTask.getId())).thenReturn(Optional.of(sampleTask));
+        Mockito.when(taskRepository.save(Mockito.any(Task.class))).thenReturn(sampleTask);
+
+        TaskResponse response = taskService.changeStatus(workerUser.getId(), sampleTask.getId(), TaskStatus.IN_PROGRESS);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(TaskStatus.IN_PROGRESS, sampleTask.getStatus());
+    }
+
+    @Test
+    void testChangeStatus_Forbidden_WhenNotAssignee() {
+        Mockito.when(taskRepository.findById(sampleTask.getId())).thenReturn(Optional.of(sampleTask));
+
+        ResponseStatusException ex = Assertions.assertThrows(ResponseStatusException.class, () -> {
+            taskService.changeStatus(999, sampleTask.getId(), TaskStatus.DONE);
+        });
+
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    void testDeleteTask_Forbidden_WhenNotOwner() {
+        Mockito.when(taskRepository.findById(sampleTask.getId())).thenReturn(Optional.of(sampleTask));
+
+        ResponseStatusException ex = Assertions.assertThrows(ResponseStatusException.class, () -> {
+            taskService.deleteTask(999, sampleTask.getId()); // Not owner
+        });
+
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    void testGetTasksForWorkspacePaged_Success() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Task> taskPage = new PageImpl<>(List.of(sampleTask), pageable, 1);
+
+        Mockito.when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
+        Mockito.when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        Mockito.when(workspaceMemberRepository.existsByUserAndWorkspace(owner, workspace)).thenReturn(true);
+        Mockito.when(taskRepository.findAllTasksByWorkspace(workspace, pageable)).thenReturn(taskPage);
+
+        Page<TaskResponse> response = taskService.getTasksForWorkspacePaged(workspace.getId(), owner.getId(), pageable);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(1, response.getTotalElements());
+        Assertions.assertEquals(sampleTask.getTitle(), response.getContent().get(0).title());
     }
 }

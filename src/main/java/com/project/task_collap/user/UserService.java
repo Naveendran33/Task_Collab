@@ -9,7 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.security.core.Authentication;
 import com.project.task_collap.config.jwt.JwtUtil;
+import com.project.task_collap.config.jwt.UserPrincipal;
 import com.project.task_collap.user.dtos.LoginRequest;
 import com.project.task_collap.user.dtos.LoginResponse;
 import com.project.task_collap.user.dtos.UserRequest;
@@ -53,15 +55,14 @@ public class UserService {
     }
 
     public LoginResponse loginUser(LoginRequest request) {
-        authenticationManager.authenticate(
+        Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username Not Found"));
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getId());
+        String token = jwtUtil.generateToken(userPrincipal.getUsername(), userPrincipal.getId());
 
-        return new LoginResponse(token, user.getUsername(), user.getId());
+        return new LoginResponse(token, userPrincipal.getUsername(), userPrincipal.getId());
 
     }
 

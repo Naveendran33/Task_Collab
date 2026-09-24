@@ -14,7 +14,7 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
-    @Value("${jwt_key}")
+    @Value("${jwt.secret:${jwt_key:${jwt-key:q<hosVl6bLFW,T2B<-^S02p9/P@D=kET$c/(-.]QYB3}}}")
     private String secretKey;
 
     public String generateToken(String username, Integer id) {

@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.project.task_collap.config.jwt.UserPrincipal;
 import com.project.task_collap.comment.dto.CommentRequest;
 import com.project.task_collap.comment.dto.CommentResponse;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -31,16 +31,16 @@ public class CommentController {
 
     @GetMapping("/task/{taskId}")
     public ResponseEntity<List<CommentResponse>> getAllCommentsForTask(@PathVariable Integer taskId,
-            HttpServletRequest httpServlet) {
-        Integer userId = commentService.getUserFromServlet(httpServlet);
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        Integer userId = currentUser.getId();
         List<CommentResponse> responses = commentService.getCommentsForTask(userId, taskId);
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
     @PostMapping("/add")
     public ResponseEntity<CommentResponse> createComment(@Valid @RequestBody CommentRequest request,
-            HttpServletRequest httpServlet) {
-        Integer userId = commentService.getUserFromServlet(httpServlet);
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        Integer userId = currentUser.getId();
         CommentResponse response = commentService.addComment(userId, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -48,15 +48,16 @@ public class CommentController {
     @PatchMapping("/edit/{commentId}")
     public ResponseEntity<CommentResponse> editComment(@PathVariable Integer commentId,
             @Valid @RequestBody CommentRequest request,
-            HttpServletRequest httpServlet) {
-        Integer userId = commentService.getUserFromServlet(httpServlet);
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        Integer userId = currentUser.getId();
         CommentResponse response = commentService.editComment(userId, commentId, request.content());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{commentId}")
-    public ResponseEntity<String> deleteComment(@PathVariable Integer commentId, HttpServletRequest httpServlet) {
-        Integer userId = commentService.getUserFromServlet(httpServlet);
+    public ResponseEntity<String> deleteComment(@PathVariable Integer commentId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        Integer userId = currentUser.getId();
         String response = commentService.deleteComment(userId, commentId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

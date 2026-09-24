@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.project.task_collap.config.jwt.UserPrincipal;
 import com.project.task_collap.user.dtos.LoginRequest;
 import com.project.task_collap.user.dtos.LoginResponse;
 import com.project.task_collap.user.dtos.UserRequest;
 import com.project.task_collap.user.dtos.UserResponse;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -27,8 +28,6 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
-
-
 
     @PostMapping("/create")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
@@ -43,9 +42,8 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> currentUser(HttpServletRequest httpServlet) {
-        Integer userId = (Integer) httpServlet.getAttribute("userId");
-        UserResponse response = userService.currentUser(userId);
+    public ResponseEntity<UserResponse> currentUser(@AuthenticationPrincipal UserPrincipal currentUser) {
+        UserResponse response = userService.currentUser(currentUser.getId());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

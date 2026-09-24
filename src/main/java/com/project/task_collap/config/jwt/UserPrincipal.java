@@ -9,17 +9,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.project.task_collap.user.User;
 
-public class UserPrinciples implements UserDetails {
+public class UserPrincipal implements UserDetails {
 
     private final User user;
 
-    public UserPrinciples(User user) {
+    public UserPrincipal(User user) {
         this.user = user;
+    }
+
+    public Integer getId() {
+        return user.getId();
+    }
+
+    public User getUser() {
+        return user;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-
         return AuthorityUtils.createAuthorityList("ROLE_USER");
     }
 

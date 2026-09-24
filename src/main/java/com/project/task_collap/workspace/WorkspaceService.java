@@ -16,8 +16,6 @@ import com.project.task_collap.workspace.dtos.WorkspaceRequestDto;
 import com.project.task_collap.workspace.dtos.WorkspaceResponseDto;
 import com.project.task_collap.workspace.mapper.WorkspaceMapper;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 @Service
 public class WorkspaceService {
 
@@ -65,8 +63,8 @@ public class WorkspaceService {
             workspaceRepository.deleteById(workspaceId);
             return "Workspace with Id : " + workspaceId + " deleted successfully";
         } else {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,
-                    "You are not a owner to Delete this workspace");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You are not the owner of this workspace to delete it");
         }
     }
 
@@ -91,8 +89,8 @@ public class WorkspaceService {
 
             return WorkspaceMapper.workspaceMemberToResponse(workspaceMember);
         } else {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,
-                    "You are Not a Owner to add member to this workspace");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You are not the owner of this workspace to add members");
         }
     }
 
@@ -105,15 +103,15 @@ public class WorkspaceService {
     @Transactional
     public String deleteMemberInWorkspace(Integer memberId, Integer ownerId) {
         WorkspaceMember member = workspaceMemberRepository.findById(memberId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No WorkspaceMember Found at Id " + memberId));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No WorkspaceMember found with Id " + memberId));
         if (!member.getWorkspace().getOwner().getId().equals(ownerId)) {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,
-                    "You are Not Allowed to Delete any workspace member");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You are not allowed to delete any workspace member");
         }
 
         if (member.getRole() == WorkspaceRole.OWNER) {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,
-                    "Cannot Delete the Owner from the Workspace");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot delete the owner from the workspace");
         }
         workspaceMemberRepository.deleteById(memberId);
         return "Successfully deleted WorkspaceMember with Id : " + memberId;
@@ -121,22 +119,22 @@ public class WorkspaceService {
 
     public WorkspaceMemberResponse updateMemberRole(Integer ownerId, Integer memberId, WorkspaceRole role) {
         if (role == WorkspaceRole.OWNER) {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Cannot set the role to Owner");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot set the role to OWNER");
         }
         WorkspaceMember member = getWorkspaceMemberById(memberId);
         if (member.getWorkspace().getOwner().getId().equals(ownerId)) {
             if (ownerId.equals(member.getUser().getId())) {
-                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Cannot change the role of a Owner");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot change the role of an Owner");
             }
             member.setRole(role);
             workspaceMemberRepository.save(member);
             return WorkspaceMapper.workspaceMemberToResponse(member);
         } else {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Only Owner can Change Roles");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can change roles");
         }
     }
 
-    public List<MyWorkspacesResponse> getAllMyWorspaces(Integer userId) {
+    public List<MyWorkspacesResponse> getAllMyWorkspaces(Integer userId) {
         User user = getUserById(userId);
         List<WorkspaceMember> myMemberDetails = workspaceMemberRepository.findAllWorkspaceMembersByUser(user);
 
@@ -158,9 +156,5 @@ public class WorkspaceService {
         return workspaceMemberRepository.findById(memberId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Workspace Member not Found at Id : " + memberId));
-    }
-
-    public Integer currentUserId(HttpServletRequest httpServlet) {
-        return (Integer) httpServlet.getAttribute("userId");
     }
 }

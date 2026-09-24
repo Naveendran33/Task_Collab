@@ -17,8 +17,6 @@ import com.project.task_collap.workspace.WorkspaceMember;
 import com.project.task_collap.workspace.WorkspaceMemberRepository;
 import com.project.task_collap.workspace.WorkspaceRole;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 @Service
 public class CommentService {
 
@@ -43,7 +41,7 @@ public class CommentService {
         Task task = getTaskFromTaskId(request.taskId());
         WorkspaceMember commenter = workspaceMemberRepository.findByUserAndWorkspace(user, task.getWorkspace())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "You are Not a Member of the Workspace"));
+                        "You are not a member of this workspace"));
 
         if (task.getAssignee() != null && task.getAssignee().equals(commenter)
                 || commenter.getRole().equals(WorkspaceRole.OWNER)) {
@@ -58,7 +56,7 @@ public class CommentService {
 
             return commentResponse;
         } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are Not allowed to Comment on this task");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to comment on this task");
         }
 
     }
@@ -87,7 +85,7 @@ public class CommentService {
 
             return commentResponse;
         } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are Not a Commenter");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the commenter");
         }
     }
 
@@ -98,28 +96,24 @@ public class CommentService {
             messagingTemplate.convertAndSend("/live/task/" + comment.getTask().getId() + "/comments/delete", commentId);
 
             commentRepository.delete(comment);
-            return "Comment with Id : " + commentId + " deleted Successfully";
+            return "Comment with Id: " + commentId + " deleted successfully";
         } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are Not Allowed to Delete this Comment");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to delete this comment");
         }
     }
 
     private User getUserFromUserId(Integer userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not found with Id : " + userId));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with Id: " + userId));
     }
 
     private Task getTaskFromTaskId(Integer taskId) {
         return taskRepository.findById(taskId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task Not found with Id : " + taskId));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found with Id: " + taskId));
     }
 
     private Comment getCommentFromCommentId(Integer commentId) {
         return commentRepository.findById(commentId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment Not found with Id : " + commentId));
-    }
-
-    public Integer getUserFromServlet(HttpServletRequest request) {
-        return (Integer) request.getAttribute("userId");
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found with Id: " + commentId));
     }
 }

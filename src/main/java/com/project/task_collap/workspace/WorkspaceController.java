@@ -13,13 +13,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.project.task_collap.config.jwt.UserPrincipal;
 import com.project.task_collap.workspace.dtos.MyWorkspacesResponse;
 import com.project.task_collap.workspace.dtos.WorkspaceMemberRequest;
 import com.project.task_collap.workspace.dtos.WorkspaceMemberResponse;
 import com.project.task_collap.workspace.dtos.WorkspaceRequestDto;
 import com.project.task_collap.workspace.dtos.WorkspaceResponseDto;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -34,30 +35,30 @@ public class WorkspaceController {
 
     @PostMapping("/create")
     public ResponseEntity<WorkspaceResponseDto> createWorkspace(@Valid @RequestBody WorkspaceRequestDto request,
-            HttpServletRequest httpServlet) {
-        Integer ownerId = workspaceService.currentUserId(httpServlet);
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        Integer ownerId = currentUser.getId();
         WorkspaceResponseDto response = workspaceService.createWorkspace(request, ownerId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/owned")
-    public ResponseEntity<List<WorkspaceResponseDto>> getMyWorkspace(HttpServletRequest httpServlet) {
-        Integer ownerId = workspaceService.currentUserId(httpServlet);
+    public ResponseEntity<List<WorkspaceResponseDto>> getMyWorkspace(@AuthenticationPrincipal UserPrincipal currentUser) {
+        Integer ownerId = currentUser.getId();
         List<WorkspaceResponseDto> response = workspaceService.getMyWorkspaces(ownerId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteMyWorkspace(HttpServletRequest httpServlet, @RequestParam Integer workspaceId) {
-        Integer ownerId = workspaceService.currentUserId(httpServlet);
+    public ResponseEntity<String> deleteMyWorkspace(@AuthenticationPrincipal UserPrincipal currentUser, @RequestParam Integer workspaceId) {
+        Integer ownerId = currentUser.getId();
         String response = workspaceService.deleteMyWorkspace(ownerId, workspaceId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("member/add")
-    public ResponseEntity<WorkspaceMemberResponse> addMember(HttpServletRequest httpServlet,
+    public ResponseEntity<WorkspaceMemberResponse> addMember(@AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @RequestBody WorkspaceMemberRequest request) {
-        Integer ownerId = workspaceService.currentUserId(httpServlet);
+        Integer ownerId = currentUser.getId();
         WorkspaceMemberResponse response = workspaceService.addMember(ownerId, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -70,25 +71,25 @@ public class WorkspaceController {
 
     @DeleteMapping("member/delete")
     public ResponseEntity<String> deleteMember(@RequestParam Integer memberId,
-            HttpServletRequest httpServlet) {
-        Integer ownerId = workspaceService.currentUserId(httpServlet);
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        Integer ownerId = currentUser.getId();
         String response = workspaceService.deleteMemberInWorkspace(memberId, ownerId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PutMapping("/member/update-role")
-    public ResponseEntity<WorkspaceMemberResponse> updateRole(HttpServletRequest httpServlet,
+    public ResponseEntity<WorkspaceMemberResponse> updateRole(@AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam Integer memberId,
             @RequestParam WorkspaceRole role) {
-        Integer ownerId = workspaceService.currentUserId(httpServlet);
+        Integer ownerId = currentUser.getId();
         WorkspaceMemberResponse response = workspaceService.updateMemberRole(ownerId, memberId, role);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("member/myWorkspaces")
-    public ResponseEntity<List<MyWorkspacesResponse>> allMyWorkspaces(HttpServletRequest httpServlet) {
-        Integer userId = workspaceService.currentUserId(httpServlet);
-        List<MyWorkspacesResponse> responses = workspaceService.getAllMyWorspaces(userId);
+    public ResponseEntity<List<MyWorkspacesResponse>> allMyWorkspaces(@AuthenticationPrincipal UserPrincipal currentUser) {
+        Integer userId = currentUser.getId();
+        List<MyWorkspacesResponse> responses = workspaceService.getAllMyWorkspaces(userId);
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
