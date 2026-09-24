@@ -35,53 +35,54 @@ Designed to mirror modern workflow engines like Jira, Linear, and Trello, it emp
 Task Collab adheres to clean, layered architecture principles with strict boundary separation:
 
 ```mermaid
-graph TD
+flowchart TD
     Client["Client (Browser / Postman / Mobile)"]
-    
-    subgraph Spring Boot Application
+
+    subgraph App["Spring Boot Application (:1717)"]
         Filter["JwtService (OncePerRequestFilter)"]
         SecCtx["SecurityContext (UserPrincipal)"]
-        
-        subgraph REST Layer
+
+        subgraph REST["REST Controllers"]
             UserController["UserController"]
             WorkspaceController["WorkspaceController"]
             TaskController["TaskController"]
             CommentController["CommentController"]
         end
-        
-        subgraph Business Logic Layer
+
+        subgraph Services["Business Logic Services"]
             UserService["UserService"]
             WorkspaceService["WorkspaceService"]
             TaskService["TaskService"]
             CommentService["CommentService"]
         end
-        
-        subgraph Real-Time Broker
-            Broker["SimpMessagingTemplate (STOMP /live)"]
+
+        subgraph Broker["STOMP Broker"]
+            SimpBroker["SimpMessagingTemplate (/live/*)"]
         end
-        
-        subgraph Mapping Layer
-            Mappers["Static Mappers (Entity ↔ Record DTO)"]
-        end
-        
-        subgraph Persistence Layer
-            Repositories["Spring Data JPA Repositories"]
+
+        subgraph Repos["Data Repositories"]
+            JPA["Spring Data JPA Repositories"]
         end
     end
-    
-    subgraph Data Stores
-        DB[("PostgreSQL 17 (Docker)")]
+
+    subgraph DataStore["Database"]
+        DB[("PostgreSQL 17")]
     end
 
     Client -->|HTTP + Bearer Token| Filter
     Filter -->|Set Authentication| SecCtx
-    Filter --> REST Layer
-    REST Layer --> Business Logic Layer
-    Business Logic Layer --> Mappers
-    Business Logic Layer --> Repositories
-    CommentService -->|Broadcast Comment Events| Broker
-    Broker -.->|Push Notifications| Client
-    Repositories --> DB
+    Filter --> REST
+    UserController --> UserService
+    WorkspaceController --> WorkspaceService
+    TaskController --> TaskService
+    CommentController --> CommentService
+    CommentService -->|Broadcast Comment Events| SimpBroker
+    SimpBroker -.->|Push Notifications| Client
+    UserService --> JPA
+    WorkspaceService --> JPA
+    TaskService --> JPA
+    CommentService --> JPA
+    JPA --> DB
 ```
 
 ---
@@ -92,57 +93,57 @@ Entity relationships are scoped so that tasks and comments reference **`Workspac
 
 ```mermaid
 erDiagram
-    USER ||--o{ WORKSPACE : "owns"
-    USER ||--o{ WORKSPACE_MEMBER : "participates in"
-    WORKSPACE ||--o{ WORKSPACE_MEMBER : "contains"
-    WORKSPACE ||--o{ TASK : "groups"
-    WORKSPACE_MEMBER ||--o{ TASK : "assigned to"
-    WORKSPACE_MEMBER ||--o{ COMMENT : "authors"
-    TASK ||--o{ COMMENT : "receives"
+    USER ||--o{ WORKSPACE : owns
+    USER ||--o{ WORKSPACE_MEMBER : participates
+    WORKSPACE ||--o{ WORKSPACE_MEMBER : contains
+    WORKSPACE ||--o{ TASK : groups
+    WORKSPACE_MEMBER ||--o{ TASK : assigned_to
+    WORKSPACE_MEMBER ||--o{ COMMENT : authors
+    TASK ||--o{ COMMENT : receives
 
     USER {
-        Integer id PK
-        String username UK
-        String email UK
-        String passwordHash
-        LocalDateTime createdAt
+        int id PK
+        string username
+        string email
+        string password
+        datetime createdAt
     }
 
     WORKSPACE {
-        Integer id PK
-        String name UK
-        String description
-        Integer owner_id FK
-        LocalDateTime createdAt
+        int id PK
+        string name
+        string description
+        int ownerId FK
+        datetime createdAt
     }
 
     WORKSPACE_MEMBER {
-        Integer id PK
-        Integer user_id FK
-        Integer workspace_id FK
-        WorkspaceRole role "OWNER | WORKER | VIEWER"
+        int id PK
+        int userId FK
+        int workspaceId FK
+        string role
     }
 
     TASK {
-        Integer id PK
-        String title
-        String description
-        Integer workspace_id FK
-        Integer assignee_id FK "WorkspaceMember"
-        TaskStatus status "TODO | IN_PROGRESS | DONE"
-        TaskPriority priority "LOW | MEDIUM | HIGH"
-        LocalDate dueDate
-        LocalDateTime createdAt
-        LocalDateTime updatedAt
+        int id PK
+        string title
+        string description
+        int workspaceId FK
+        int assigneeId FK
+        string status
+        string priority
+        date dueDate
+        datetime createdAt
+        datetime updatedAt
     }
 
     COMMENT {
-        Integer id PK
-        String content "TEXT"
-        Integer task_id FK
-        Integer commenter_id FK "WorkspaceMember"
-        LocalDateTime createdAt
-        LocalDateTime updatedAt
+        int id PK
+        string content
+        int taskId FK
+        int commenterId FK
+        datetime createdAt
+        datetime updatedAt
     }
 ```
 
@@ -317,8 +318,6 @@ http://localhost:1717/swagger-ui.html
 | **Updated Comment** | `/live/task/{taskId}/comments/update` | `CommentResponse` (JSON) |
 | **Deleted Comment** | `/live/task/{taskId}/comments/delete` | `commentId` (Integer) |
 
-> 💡 **Browser WebSocket Test Tool:** Open [`Test_WebSocket/webSocket.html`](file:///D:/Spring%20boot/task_collap/Test_WebSocket/webSocket.html) directly in any browser to connect, subscribe to task topics, and monitor live broadcasts!
-
 ---
 
 ## 🧪 Testing Suite
@@ -353,10 +352,6 @@ task_collap/
 ├── README.md                         # Project documentation
 ├── docs/
 │   └── api_testing_report.md         # End-to-end integration test run log
-├── helper/
-│   └── interview_preparation_guide.md# 50+ interview Q&As & deep architecture guide
-├── Test_WebSocket/
-│   └── webSocket.html                # Interactive SockJS / STOMP web client
 ├── frontend/                         # Vanilla HTML5/CSS3/JS Single Page Application
 │   ├── index.html                    # SPA entry point
 │   ├── css/                          # Glassmorphic CSS design system & animations
